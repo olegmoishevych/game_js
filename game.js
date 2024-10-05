@@ -25,20 +25,18 @@ let stars;
 let score = 0;
 let scoreText;
 let canDoubleJump = false;
+let boss;
+let bossActive = false;
+let bossSpeed = 100;
 
 function preload() {
-
     this.load.image('sky', 'https://labs.phaser.io/assets/skies/space3.png');
     this.load.image('ground', 'https://labs.phaser.io/assets/sprites/platform.png');
     this.load.image('star', 'https://labs.phaser.io/assets/demoscene/star.png');
-    this.load.spritesheet('dude',
-        'https://labs.phaser.io/assets/sprites/dude.png',
-        { frameWidth: 32, frameHeight: 48 }
-    );
+    this.load.spritesheet('dude', 'https://labs.phaser.io/assets/sprites/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create() {
-
     this.add.image(400, 300, 'sky');
 
     platforms = this.physics.add.staticGroup();
@@ -48,7 +46,6 @@ function create() {
     platforms.create(750, 220, 'ground');
 
     player = this.physics.add.sprite(100, 450, 'dude');
-
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
 
@@ -90,10 +87,20 @@ function create() {
     this.physics.add.overlap(player, stars, collectStar, null, this);
 
     scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });
+
+    // Создание босса, используя тот же спрайт, что и игрок, но с измененным цветом
+    boss = this.physics.add.sprite(750, 450, 'dude');
+    boss.setTint(0xff0000);  // Изменяем цвет босса на красный
+    boss.setBounce(0.2);
+    boss.setCollideWorldBounds(true);
+    boss.setVisible(false); // Прячем босса, пока он не нужен
+    boss.setActive(false);
+
+    this.physics.add.collider(boss, platforms); // Чтобы босс мог стоять на платформах
+    this.physics.add.collider(player, boss, hitBoss, null, this); // Столкновение игрока с боссом
 }
 
 function update() {
-
     if (cursors.left.isDown) {
         player.setVelocityX(-160);
         player.anims.play('left', true);
@@ -111,11 +118,26 @@ function update() {
 
     if (cursors.up.isDown && player.body.touching.down) {
         player.setVelocityY(-500);
-    }
-
-    else if (cursors.up.isDown && canDoubleJump) {
+    } else if (cursors.up.isDown && canDoubleJump) {
         player.setVelocityY(-450);
         canDoubleJump = false;
+    }
+
+    // Проверка на появление босса при достижении 300 очков
+    if (score >= 30 && !bossActive) {
+        boss.setVisible(true);
+        boss.setActive(true);
+        bossActive = true;
+        boss.setVelocityX(bossSpeed); // Установить скорость для босса
+    }
+
+    // Логика движения босса
+    if (bossActive) {
+        if (boss.x >= 750) {
+            boss.setVelocityX(-bossSpeed); // Меняем направление движения налево
+        } else if (boss.x <= 50) {
+            boss.setVelocityX(bossSpeed); // Меняем направление движения направо
+        }
     }
 }
 
@@ -124,4 +146,24 @@ function collectStar(player, star) {
 
     score += 10;
     scoreText.setText('Score: ' + score);
+
+    // Проверяем, если все звезды собраны
+    if (stars.countActive(true) === 0) {
+        stars.children.iterate(function (child) {
+            child.enableBody(true, child.x, 0, true, true);
+        });
+    }
+}
+
+function hitBoss(player, boss) {
+    // Логика столкновения игрока с боссом
+    // Можно уменьшить жизнь игрока, проиграть анимацию или просто перезапустить игру
+    this.physics.pause();
+    player.setTint(0xff0000);
+    player.anims.play('turn');
+    gameOver = true;
+
+    this.time.delayedCall(1000, () => {
+        this.scene.restart();
+    });
 }
