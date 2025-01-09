@@ -88,16 +88,15 @@ function create() {
 
     scoreText = this.add.text(16, 16, 'Score: 0', { fontSize: '32px', fill: '#fff' });
 
-    // Создание босса, используя тот же спрайт, что и игрок, но с измененным цветом
     boss = this.physics.add.sprite(750, 450, 'dude');
-    boss.setTint(0xff0000);  // Изменяем цвет босса на красный
+    boss.setTint(0xff0000); 
     boss.setBounce(0.2);
     boss.setCollideWorldBounds(true);
-    boss.setVisible(false); // Прячем босса, пока он не нужен
+    boss.setVisible(false); 
     boss.setActive(false);
 
-    this.physics.add.collider(boss, platforms); // Чтобы босс мог стоять на платформах
-    this.physics.add.collider(player, boss, hitBoss, null, this); // Столкновение игрока с боссом
+    this.physics.add.collider(boss, platforms); 
+    this.physics.add.collider(player, boss, hitBoss, null, this);
 }
 
 function update() {
@@ -128,15 +127,14 @@ function update() {
         boss.setVisible(true);
         boss.setActive(true);
         bossActive = true;
-        boss.setVelocityX(bossSpeed); // Установить скорость для босса
+        boss.setVelocityX(bossSpeed); 
     }
 
-    // Логика движения босса
     if (bossActive) {
         if (boss.x >= 750) {
-            boss.setVelocityX(-bossSpeed); // Меняем направление движения налево
+            boss.setVelocityX(-bossSpeed); 
         } else if (boss.x <= 50) {
-            boss.setVelocityX(bossSpeed); // Меняем направление движения направо
+            boss.setVelocityX(bossSpeed); 
         }
     }
 }
@@ -147,7 +145,6 @@ function collectStar(player, star) {
     score += 10;
     scoreText.setText('Score: ' + score);
 
-    // Проверяем, если все звезды собраны
     if (stars.countActive(true) === 0) {
         stars.children.iterate(function (child) {
             child.enableBody(true, child.x, 0, true, true);
@@ -156,8 +153,7 @@ function collectStar(player, star) {
 }
 
 function hitBoss(player, boss) {
-    // Логика столкновения игрока с боссом
-    // Можно уменьшить жизнь игрока, проиграть анимацию или просто перезапустить игру
+
     this.physics.pause();
     player.setTint(0xff0000);
     player.anims.play('turn');
